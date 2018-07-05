@@ -1,6 +1,7 @@
 module Main exposing (..)
 
-import Html exposing (..)
+import Html exposing (Html, div, h1, text)
+import Html.Attributes exposing (class, classList)
 
 
 main : Program Never Model Msg
@@ -38,4 +39,20 @@ update msg model =
 
 view : Model -> Html Msg
 view model =
-    h1 [] [ text "Hello Cruel World!" ]
+    div [ class "wrapper" ]
+        [ createCard
+        , createCard
+        , createCard
+        , createCard
+        , createCard
+        ]
+
+
+createCard : Html Msg
+createCard =
+    div [ class "container" ]
+        [ div [ classList [ ( "card", True ), ( "flipped", True ) ] ]
+            [ div [ class "card-back" ] []
+            , div [ class "front card-bender" ] []
+            ]
+        ]
