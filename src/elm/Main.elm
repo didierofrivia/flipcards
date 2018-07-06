@@ -2,6 +2,7 @@ module Main exposing (..)
 
 import Html exposing (Html, div, h1, text)
 import Html.Attributes exposing (class, classList)
+import Html.Events exposing (onClick)
 import Random
 
 
@@ -38,6 +39,7 @@ type Model
 type Msg
     = NoOp
     | Shuffle (List Int)
+    | Flip Card
 
 
 cards : List String
@@ -82,7 +84,7 @@ createCard : Card -> Html Msg
 createCard card =
     div [ class "container" ]
         -- try changing ("flipped", False) into ("flipped", True)
-        [ div [ classList [ ( "card", True ), ( "flipped", True ) ] ]
+        [ div [ classList [ ( "card", True ), ( "flipped", card.flipped ) ], onClick (Flip card) ]
             [ div [ class "card-back" ] []
             , div [ class ("front " ++ cardClass card) ] []
             ]
@@ -102,6 +104,14 @@ shuffleDeck deck xs =
         |> List.sortBy Tuple.second
         |> List.unzip
         |> Tuple.first
+
+
+flip : Bool -> Card -> Card -> Card
+flip isFlipped a b =
+    if (a.id == b.id) && (a.group == b.group) then
+        { b | flipped = isFlipped }
+    else
+        b
 
 
 init : ( Model, Cmd Msg )
@@ -137,6 +147,15 @@ update msg model =
                     shuffleDeck deck xs
             in
             Playing newDeck ! []
+
+        Flip card ->
+            case model of
+                Playing deck ->
+                    let
+                        newDeck =
+                            List.map (flip True card) deck
+                    in
+                    Playing newDeck ! []
 
 
 view : Model -> Html Msg
