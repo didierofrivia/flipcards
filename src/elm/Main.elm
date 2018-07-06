@@ -34,6 +34,8 @@ type alias Deck =
 
 type Model
     = Playing Deck
+    | Guessing Deck Card
+    | MatchCard Deck Card Card
 
 
 type Msg
@@ -118,9 +120,44 @@ flip isFlipped a b =
         b
 
 
-subscriptions : Model -> Sub Msg
-subscriptions model =
-    Sub.none
+checkIfCorrect : Card -> Model -> ( Model, Cmd Msg )
+checkIfCorrect card model =
+    case model of
+        Playing deck ->
+            let
+                newDeck =
+                    List.map (flip True card) deck
+            in
+            Guessing newDeck card ! []
+
+        Guessing deck guess ->
+            let
+                newDeck =
+                    List.map (flip True card) deck
+
+                newModel =
+                    MatchCard newDeck guess card
+            in
+            newModel ! []
+
+        MatchCard deck guess1 guess2 ->
+            if guess1.id == guess2.id then
+                {-
+                   user has guessed correctly!
+                   keep both cards flipped and then run update
+                   again to flip the new card that has been just clicked
+                -}
+                update (Flip card) (Playing deck)
+            else
+                -- flip the two cards face down because they don't match
+                let
+                    flipGuess =
+                        flip False guess1 >> flip False guess2
+
+                    newDeck =
+                        List.map flipGuess deck
+                in
+                Playing newDeck ! []
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -137,13 +174,17 @@ update msg model =
             Playing newDeck ! []
 
         Flip card ->
-            case model of
-                Playing deck ->
-                    let
-                        newDeck =
-                            List.map (flip True card) deck
-                    in
-                    Playing newDeck ! []
+            if card.flipped then
+                -- if a user clicks on an image that's flipped already
+                -- then don't do anything
+                model ! []
+            else
+                checkIfCorrect card model
+
+
+subscriptions : Model -> Sub Msg
+subscriptions model =
+    Sub.none
 
 
 
@@ -166,8 +207,20 @@ createCard card =
         ]
 
 
+game : Deck -> Html Msg
+game deck =
+    div [ class "wrapper" ]
+        [ div [] (List.map createCard deck) ]
+
+
 view : Model -> Html Msg
 view model =
     case model of
         Playing deck ->
-            div [ class "wrapper" ] (List.map createCard deck)
+            game deck
+
+        Guessing deck _ ->
+            game deck
+
+        MatchCard deck _ _ ->
+            game deck
