@@ -42,6 +42,10 @@ type Msg
     | Flip Card
 
 
+
+-- MODEL
+
+
 cards : List String
 cards =
     [ "amy"
@@ -75,20 +79,20 @@ deck =
     List.concat [ groupA, groupB ]
 
 
-cardClass : Card -> String
-cardClass card =
-    "card-" ++ card.id
+init : ( Model, Cmd Msg )
+init =
+    let
+        model =
+            Playing deck
+
+        cmd =
+            randomList Shuffle (List.length deck)
+    in
+    ( model, cmd )
 
 
-createCard : Card -> Html Msg
-createCard card =
-    div [ class "container" ]
-        -- try changing ("flipped", False) into ("flipped", True)
-        [ div [ classList [ ( "card", True ), ( "flipped", card.flipped ) ], onClick (Flip card) ]
-            [ div [ class "card-back" ] []
-            , div [ class ("front " ++ cardClass card) ] []
-            ]
-        ]
+
+-- UPDATE
 
 
 randomList : (List Int -> Msg) -> Int -> Cmd Msg
@@ -114,25 +118,9 @@ flip isFlipped a b =
         b
 
 
-init : ( Model, Cmd Msg )
-init =
-    let
-        model =
-            Playing deck
-
-        cmd =
-            randomList Shuffle (List.length deck)
-    in
-    ( model, cmd )
-
-
 subscriptions : Model -> Sub Msg
 subscriptions model =
     Sub.none
-
-
-
--- a ! b is equivalent to (a, Cmd.batch b)
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -156,6 +144,26 @@ update msg model =
                             List.map (flip True card) deck
                     in
                     Playing newDeck ! []
+
+
+
+-- VIEW
+
+
+cardClass : Card -> String
+cardClass card =
+    "card-" ++ card.id
+
+
+createCard : Card -> Html Msg
+createCard card =
+    div [ class "container" ]
+        -- try changing ("flipped", False) into ("flipped", True)
+        [ div [ classList [ ( "card", True ), ( "flipped", card.flipped ) ], onClick (Flip card) ]
+            [ div [ class "card-back" ] []
+            , div [ class ("front " ++ cardClass card) ] []
+            ]
+        ]
 
 
 view : Model -> Html Msg
