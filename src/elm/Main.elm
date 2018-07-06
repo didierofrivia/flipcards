@@ -1,6 +1,6 @@
 module Main exposing (..)
 
-import Html exposing (Html, div, h1, text)
+import Html exposing (Html, div, h1, p, span, text)
 import Html.Attributes exposing (class, classList)
 import Html.Events exposing (onClick)
 import Random
@@ -36,10 +36,12 @@ type Model
     = Playing Deck
     | Guessing Deck Card
     | MatchCard Deck Card Card
+    | GameOver Deck
 
 
 type Msg
     = NoOp
+    | Reset
     | Shuffle (List Int)
     | Flip Card
 
@@ -135,8 +137,15 @@ checkIfCorrect card model =
                 newDeck =
                     List.map (flip True card) deck
 
+                -- when all cards are flipped, the game is over
+                isOver =
+                    List.all .flipped newDeck
+
                 newModel =
-                    MatchCard newDeck guess card
+                    if isOver then
+                        GameOver newDeck
+                    else
+                        MatchCard newDeck guess card
             in
             newModel ! []
 
@@ -159,6 +168,9 @@ checkIfCorrect card model =
                 in
                 Playing newDeck ! []
 
+        GameOver deck ->
+            GameOver deck ! []
+
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
@@ -180,6 +192,9 @@ update msg model =
                 model ! []
             else
                 checkIfCorrect card model
+
+        Reset ->
+            init
 
 
 subscriptions : Model -> Sub Msg
@@ -207,10 +222,26 @@ createCard card =
         ]
 
 
+wrapper : Deck -> Html Msg -> Html Msg
+wrapper deck overlay =
+    div [ class "wrapper" ]
+        [ div [] (List.map createCard deck)
+        , overlay
+        ]
+
+
 game : Deck -> Html Msg
 game deck =
-    div [ class "wrapper" ]
-        [ div [] (List.map createCard deck) ]
+    wrapper deck (text "")
+
+
+playAgainOverlay : Html Msg
+playAgainOverlay =
+    div [ class "congrats" ]
+        [ p [] [ text "Yay! You win!" ]
+        , text "Do you want to "
+        , span [ onClick Reset ] [ text "play again?" ]
+        ]
 
 
 view : Model -> Html Msg
@@ -224,3 +255,6 @@ view model =
 
         MatchCard deck _ _ ->
             game deck
+
+        GameOver deck ->
+            wrapper deck playAgainOverlay
