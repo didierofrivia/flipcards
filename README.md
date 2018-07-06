@@ -1,5 +1,7 @@
 # Flip Cards
 
+![Flip Cards](https://github.com/ddcesare/flipcards/raw/master/src/static/img/demo.gif)
+
 ### About:
 An simple memory game written in Elm
 
